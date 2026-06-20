@@ -13,6 +13,7 @@
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
     "@supabase/supabase-js": "^2.108.2",
+    "babel-preset-expo": "^56.0.15",
     "expo": "^54.0.35",
     "expo-camera": "~17.0.10",
     "expo-image-picker": "~17.0.11",

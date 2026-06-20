@@ -15,7 +15,7 @@ type Props = {
 
 function contarAvarias(estetica: ChecklistEstetica, mecanica: ChecklistMecanica): number {
   const vals = [...Object.values(estetica), ...Object.values(mecanica)];
-  return vals.filter(v => v === 'avaria').length;
+  return vals.filter(v => v.status === 'avaria').length;
 }
 
 function formatarData(iso: string): string {

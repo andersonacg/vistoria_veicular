@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { DadosFormulario, FotosVistoria, Vistoria, ChecklistEstetica, ChecklistMecanica } from '../types';
+import { DadosFormulario, FotosVistoria, Vistoria, ChecklistEstetica, ChecklistMecanica, ItemChecklist } from '../types';
 
 export async function buscarVistorias(inspetorId: string): Promise<Vistoria[]> {
   const { data, error } = await supabase
@@ -46,6 +46,25 @@ async function uploadFoto(localUri: string, caminho: string): Promise<string> {
   return data.publicUrl;
 }
 
+async function uploadFotosChecklist(
+  checklist: Record<string, ItemChecklist>,
+  pasta: string,
+  prefixo: string
+): Promise<Record<string, ItemChecklist>> {
+  const resultado: Record<string, ItemChecklist> = {};
+  await Promise.all(
+    Object.entries(checklist).map(async ([chave, item]) => {
+      if (item.status === 'avaria' && item.foto) {
+        const url = await uploadFoto(item.foto, `${pasta}/${prefixo}/${chave}.jpg`);
+        resultado[chave] = { status: 'avaria', foto: url };
+      } else {
+        resultado[chave] = item;
+      }
+    })
+  );
+  return resultado;
+}
+
 export async function salvarVistoria(
   dados: DadosFormulario,
   inspetorId: string
@@ -78,6 +97,15 @@ export async function salvarVistoria(
     urlChassi = await uploadFoto(dados.foto_chassi, `${pasta}/chassi.jpg`);
   }
 
+  // Upload das fotos de avaria nos checklists
+  console.log('[salvarVistoria] fazendo upload das fotos de avaria...');
+  const checklistEsteticaFinal = await uploadFotosChecklist(
+    dados.checklist_estetica, pasta, 'estetica'
+  ) as ChecklistEstetica;
+  const checklistMecanicaFinal = await uploadFotosChecklist(
+    dados.checklist_mecanica, pasta, 'mecanica'
+  ) as ChecklistMecanica;
+
   // Salvar registro no banco
   console.log('[salvarVistoria] inserindo no banco...');
   const { error } = await supabase.from('vistorias').insert({
@@ -86,10 +114,11 @@ export async function salvarVistoria(
     marca: dados.marca,
     modelo: dados.modelo,
     ano: parseInt(dados.ano, 10),
+    numero_chassi: dados.numero_chassi || null,
     inspetor_id: inspetorId,
     status: 'concluida',
-    checklist_estetica: dados.checklist_estetica,
-    checklist_mecanica: dados.checklist_mecanica,
+    checklist_estetica: checklistEsteticaFinal,
+    checklist_mecanica: checklistMecanicaFinal,
     fotos: fotosUrls,
     foto_chassi: urlChassi,
     assinatura: dados.assinatura,

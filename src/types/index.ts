@@ -1,4 +1,7 @@
-export type ItemChecklist = 'ok' | 'avaria' | null;
+export interface ItemChecklist {
+  status: 'ok' | 'avaria' | null;
+  foto?: string | null;
+}
 
 export interface ChecklistEstetica {
   lataria:      ItemChecklist;
@@ -37,6 +40,7 @@ export interface Vistoria {
   checklist_mecanica: ChecklistMecanica;
   fotos:              FotosVistoria;
   foto_chassi:        string | null;
+  numero_chassi:      string | null;
   assinatura:         string | null;
   observacoes:        string;
   created_at:         string;
@@ -60,6 +64,7 @@ export interface DadosFormulario {
   marca: string;
   modelo: string;
   ano: string;
+  numero_chassi: string;
   foto_chassi: string | null;
   checklist_estetica: ChecklistEstetica;
   checklist_mecanica: ChecklistMecanica;

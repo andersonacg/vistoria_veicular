@@ -48,16 +48,21 @@ function LinhaInfo({ label, valor }: { label: string; valor: string }) {
 }
 
 function BadgeChecklist({ valor }: { valor: ItemChecklist }) {
-  if (valor === 'ok') return <Text style={styles.badgeOk}>✓ OK</Text>;
-  if (valor === 'avaria') return <Text style={styles.badgeAvaria}>✕ Avaria</Text>;
+  if (valor.status === 'ok') return <Text style={styles.badgeOk}>✓ OK</Text>;
+  if (valor.status === 'avaria') return <Text style={styles.badgeAvaria}>✕ Avaria</Text>;
   return <Text style={styles.badgeVazio}>—</Text>;
 }
 
 function LinhaChecklist({ label, valor }: { label: string; valor: ItemChecklist }) {
   return (
-    <View style={styles.linhaChecklist}>
-      <Text style={styles.linhaChecklistLabel}>{label}</Text>
-      <BadgeChecklist valor={valor} />
+    <View>
+      <View style={styles.linhaChecklist}>
+        <Text style={styles.linhaChecklistLabel}>{label}</Text>
+        <BadgeChecklist valor={valor} />
+      </View>
+      {valor.status === 'avaria' && valor.foto && (
+        <Image source={{ uri: valor.foto }} style={styles.fotoAvaria} resizeMode="cover" />
+      )}
     </View>
   );
 }
@@ -65,13 +70,13 @@ function LinhaChecklist({ label, valor }: { label: string; valor: ItemChecklist 
 // ─── Tela principal ───────────────────────────────────────────────────────────
 
 export default function Passo7Revisao({ dados, atualizar, onNext, onBack, passo, totalPassos }: PassoProps) {
-  const { placa, marca, modelo, ano, foto_chassi, checklist_estetica,
+  const { placa, marca, modelo, ano, numero_chassi, foto_chassi, checklist_estetica,
     checklist_mecanica, fotos, assinatura, observacoes } = dados;
 
   const avariaEstetica = (Object.keys(checklist_estetica) as (keyof ChecklistEstetica)[])
-    .filter(k => checklist_estetica[k] === 'avaria').length;
+    .filter(k => checklist_estetica[k].status === 'avaria').length;
   const avariaMecanica = (Object.keys(checklist_mecanica) as (keyof ChecklistMecanica)[])
-    .filter(k => checklist_mecanica[k] === 'avaria').length;
+    .filter(k => checklist_mecanica[k].status === 'avaria').length;
   const totalAvarias = avariaEstetica + avariaMecanica;
 
   return (
@@ -99,11 +104,16 @@ export default function Passo7Revisao({ dados, atualizar, onNext, onBack, passo,
         </Secao>
 
         {/* Chassi */}
-        <Secao titulo="Foto do Chassi">
+        <Secao titulo="Chassi">
+          {numero_chassi ? (
+            <LinhaInfo label="VIN" valor={numero_chassi} />
+          ) : (
+            <Text style={styles.naoInformado}>Número não informado</Text>
+          )}
           {foto_chassi ? (
             <Image source={{ uri: foto_chassi }} style={styles.fotoChassi} resizeMode="cover" />
           ) : (
-            <Text style={styles.naoInformado}>Não fotografado</Text>
+            <Text style={[styles.naoInformado, { marginTop: 8 }]}>Foto não registrada</Text>
           )}
         </Secao>
 
@@ -220,6 +230,7 @@ const styles = StyleSheet.create({
   badgeVazio: { fontSize: 12, color: '#bbb' },
 
   fotoChassi: { width: '100%', height: 160, borderRadius: 8 },
+  fotoAvaria: { width: '100%', height: 100, borderRadius: 6, marginTop: 6 },
 
   gradeMiniaturas: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 8,

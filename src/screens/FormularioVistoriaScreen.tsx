@@ -23,12 +23,15 @@ type Props = {
 
 const dadosIniciais: DadosFormulario = {
   placa: '', marca: '', modelo: '', ano: '',
+  numero_chassi: '',
   foto_chassi: null,
   checklist_estetica: {
-    lataria: null, vidros: null, farois: null, para_brisas: null, para_choques: null,
+    lataria: { status: null }, vidros: { status: null }, farois: { status: null },
+    para_brisas: { status: null }, para_choques: { status: null },
   },
   checklist_mecanica: {
-    pneus: null, estepe: null, oleo: null, freios: null, suspensao: null,
+    pneus: { status: null }, estepe: { status: null }, oleo: { status: null },
+    freios: { status: null }, suspensao: { status: null },
   },
   fotos: {
     frente: null, traseira: null, lateral_esquerda: null, lateral_direita: null, motor: null,

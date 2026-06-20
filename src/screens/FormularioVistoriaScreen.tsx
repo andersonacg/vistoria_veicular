@@ -50,21 +50,27 @@ export default function FormularioVistoriaScreen({ navigation }: Props) {
   }
 
   async function salvar() {
+    console.log('[salvar] botão tocado, session?.user?.id:', session?.user?.id ?? 'null');
     if (!session?.user?.id) {
       Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
       return;
     }
     setSalvando(true);
     try {
-      await salvarVistoria(dados, session.user.id);
+      console.log('[salvar] chamando salvarVistoria...');
+      const id = await salvarVistoria(dados, session.user.id);
+      console.log('[salvar] sucesso! id:', id);
       Alert.alert(
         'Vistoria salva!',
         `Vistoria do veículo ${dados.placa} registrada com sucesso.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (erro: any) {
-      Alert.alert('Erro ao salvar', erro.message ?? 'Tente novamente.');
+      const mensagem = erro?.message ?? String(erro) ?? 'Erro desconhecido. Verifique o console.';
+      console.error('[salvar] ERRO capturado:', erro);
+      Alert.alert('Erro ao salvar', mensagem);
     } finally {
+      console.log('[salvar] finally — setSalvando(false)');
       setSalvando(false);
     }
   }

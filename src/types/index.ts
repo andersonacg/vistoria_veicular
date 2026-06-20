@@ -54,3 +54,25 @@ export type AppStackParamList = {
   FormularioVistoria: { vistoriaId?: string };
   DetalhesVistoria: { vistoriaId: string };
 };
+
+export interface DadosFormulario {
+  placa: string;
+  marca: string;
+  modelo: string;
+  ano: string;
+  foto_chassi: string | null;
+  checklist_estetica: ChecklistEstetica;
+  checklist_mecanica: ChecklistMecanica;
+  fotos: FotosVistoria;
+  assinatura: string | null;
+  observacoes: string;
+}
+
+export interface PassoProps {
+  dados: DadosFormulario;
+  atualizar: (parcial: Partial<DadosFormulario>) => void;
+  onNext: () => void;
+  onBack: () => void;
+  passo: number;
+  totalPassos: number;
+}

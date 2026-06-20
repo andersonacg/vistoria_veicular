@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TextInput, ScrollView,
-  TouchableOpacity, StyleSheet,
-} from 'react-native';
+import { Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import {
-  AppStackParamList,
-  ChecklistEstetica,
-  ChecklistMecanica,
-  ItemChecklist,
+  AppStackParamList, DadosFormulario,
+  ChecklistEstetica, ChecklistMecanica, FotosVistoria,
 } from '../types';
+import Passo1Veiculo from './formulario/Passo1Veiculo';
+import Passo2Chassi from './formulario/Passo2Chassi';
+import Passo3Estetica from './formulario/Passo3Estetica';
+import Passo4Mecanica from './formulario/Passo4Mecanica';
+import Passo5Fotos from './formulario/Passo5Fotos';
+import Passo6Assinatura from './formulario/Passo6Assinatura';
+import Passo7Revisao from './formulario/Passo7Revisao';
 
 type Props = {
   navigation: NativeStackNavigationProp<AppStackParamList, 'FormularioVistoria'>;
@@ -25,131 +27,60 @@ const mecanicaInicial: ChecklistMecanica = {
   pneus: null, estepe: null, oleo: null, freios: null, suspensao: null,
 };
 
-const esteticaLabels: Record<keyof ChecklistEstetica, string> = {
-  lataria: 'Lataria', vidros: 'Vidros', farois: 'Faróis',
-  para_brisas: 'Para-brisa', para_choques: 'Para-choques',
+const fotosIniciais: FotosVistoria = {
+  frente: null, traseira: null, lateral_esquerda: null, lateral_direita: null, motor: null,
 };
 
-const mecanicaLabels: Record<keyof ChecklistMecanica, string> = {
-  pneus: 'Pneus', estepe: 'Estepe', oleo: 'Óleo',
-  freios: 'Freios', suspensao: 'Suspensão',
+const dadosIniciais: DadosFormulario = {
+  placa: '', marca: '', modelo: '', ano: '',
+  foto_chassi: null,
+  checklist_estetica: esteticaInicial,
+  checklist_mecanica: mecanicaInicial,
+  fotos: fotosIniciais,
+  assinatura: null,
+  observacoes: '',
 };
 
-function BotoesItem({
-  valor,
-  onChange,
-}: {
-  valor: ItemChecklist;
-  onChange: (v: ItemChecklist) => void;
-}) {
-  return (
-    <View style={styles.botoesItem}>
-      <TouchableOpacity
-        style={[styles.botaoItem, valor === 'ok' && styles.botaoOkAtivo]}
-        onPress={() => onChange(valor === 'ok' ? null : 'ok')}
-      >
-        <Text style={[styles.botaoItemTexto, valor === 'ok' && styles.textoAtivo]}>OK</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.botaoItem, valor === 'avaria' && styles.botaoAvariaAtivo]}
-        onPress={() => onChange(valor === 'avaria' ? null : 'avaria')}
-      >
-        <Text style={[styles.botaoItemTexto, valor === 'avaria' && styles.textoAtivo]}>Avaria</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+const TOTAL_PASSOS = 7;
 
 export default function FormularioVistoriaScreen({ navigation }: Props) {
-  const [placa, setPlaca] = useState('');
-  const [marca, setMarca] = useState('');
-  const [modelo, setModelo] = useState('');
-  const [ano, setAno] = useState('');
-  const [estetica, setEstetica] = useState<ChecklistEstetica>(esteticaInicial);
-  const [mecanica, setMecanica] = useState<ChecklistMecanica>(mecanicaInicial);
-  const [observacoes, setObservacoes] = useState('');
+  const [passo, setPasso] = useState(1);
+  const [dados, setDados] = useState<DadosFormulario>(dadosIniciais);
 
-  function setItemEstetica(key: keyof ChecklistEstetica, valor: ItemChecklist) {
-    setEstetica((prev) => ({ ...prev, [key]: valor }));
+  function atualizar(parcial: Partial<DadosFormulario>) {
+    setDados(prev => ({ ...prev, ...parcial }));
   }
 
-  function setItemMecanica(key: keyof ChecklistMecanica, valor: ItemChecklist) {
-    setMecanica((prev) => ({ ...prev, [key]: valor }));
+  function avancar() {
+    if (passo < TOTAL_PASSOS) {
+      setPasso(p => p + 1);
+    } else {
+      // TODO: salvar vistoria no Supabase
+      navigation.goBack();
+    }
   }
 
-  function handleSalvar() {
-    // TODO: salvar via supabase.from('vistorias').insert()
-    navigation.goBack();
+  function voltar() {
+    if (passo === 1) {
+      Alert.alert('Cancelar vistoria', 'Os dados preenchidos serão perdidos. Deseja cancelar?', [
+        { text: 'Continuar preenchendo', style: 'cancel' },
+        { text: 'Cancelar vistoria', style: 'destructive', onPress: () => navigation.goBack() },
+      ]);
+    } else {
+      setPasso(p => p - 1);
+    }
   }
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.secao}>Dados do Veículo</Text>
-      <TextInput style={styles.input} placeholder="Placa" value={placa} onChangeText={setPlaca} autoCapitalize="characters" />
-      <TextInput style={styles.input} placeholder="Marca" value={marca} onChangeText={setMarca} />
-      <TextInput style={styles.input} placeholder="Modelo" value={modelo} onChangeText={setModelo} />
-      <TextInput style={styles.input} placeholder="Ano" value={ano} onChangeText={setAno} keyboardType="numeric" />
+  const passoProps = { dados, atualizar, onNext: avancar, onBack: voltar, passo, totalPassos: TOTAL_PASSOS };
 
-      <Text style={styles.secao}>Checklist Estética</Text>
-      {(Object.keys(esteticaInicial) as (keyof ChecklistEstetica)[]).map((key) => (
-        <View key={key} style={styles.checkItem}>
-          <Text style={styles.checkLabel}>{esteticaLabels[key]}</Text>
-          <BotoesItem valor={estetica[key]} onChange={(v) => setItemEstetica(key, v)} />
-        </View>
-      ))}
-
-      <Text style={styles.secao}>Checklist Mecânica</Text>
-      {(Object.keys(mecanicaInicial) as (keyof ChecklistMecanica)[]).map((key) => (
-        <View key={key} style={styles.checkItem}>
-          <Text style={styles.checkLabel}>{mecanicaLabels[key]}</Text>
-          <BotoesItem valor={mecanica[key]} onChange={(v) => setItemMecanica(key, v)} />
-        </View>
-      ))}
-
-      <Text style={styles.secao}>Observações</Text>
-      <TextInput
-        style={[styles.input, styles.textarea]}
-        placeholder="Observações gerais..."
-        value={observacoes}
-        onChangeText={setObservacoes}
-        multiline
-        numberOfLines={4}
-      />
-
-      <TouchableOpacity style={styles.botaoSalvar} onPress={handleSalvar}>
-        <Text style={styles.botaoSalvarTexto}>Salvar Vistoria</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
+  switch (passo) {
+    case 1: return <Passo1Veiculo {...passoProps} />;
+    case 2: return <Passo2Chassi {...passoProps} />;
+    case 3: return <Passo3Estetica {...passoProps} />;
+    case 4: return <Passo4Mecanica {...passoProps} />;
+    case 5: return <Passo5Fotos {...passoProps} />;
+    case 6: return <Passo6Assinatura {...passoProps} />;
+    case 7: return <Passo7Revisao {...passoProps} />;
+    default: return null;
+  }
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingBottom: 40 },
-  secao: { fontSize: 16, fontWeight: '700', color: '#1a73e8', marginTop: 20, marginBottom: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#ddd', borderRadius: 8,
-    padding: 12, marginBottom: 12, fontSize: 15,
-  },
-  textarea: { height: 100, textAlignVertical: 'top' },
-  checkItem: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
-  },
-  checkLabel: { fontSize: 15, color: '#333', flex: 1 },
-  botoesItem: { flexDirection: 'row', gap: 8 },
-  botaoItem: {
-    paddingHorizontal: 14, paddingVertical: 6,
-    borderRadius: 6, borderWidth: 1, borderColor: '#ccc',
-  },
-  botaoOkAtivo: { backgroundColor: '#34a853', borderColor: '#34a853' },
-  botaoAvariaAtivo: { backgroundColor: '#ea4335', borderColor: '#ea4335' },
-  botaoItemTexto: { fontSize: 13, color: '#555' },
-  textoAtivo: { color: '#fff', fontWeight: '600' },
-  botaoSalvar: {
-    backgroundColor: '#1a73e8', padding: 16, borderRadius: 8,
-    alignItems: 'center', marginTop: 24,
-  },
-  botaoSalvarTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

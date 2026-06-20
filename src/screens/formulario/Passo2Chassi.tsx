@@ -1,15 +1,34 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View, Text, StyleSheet, TouchableOpacity,
+  Image, ScrollView,
+} from 'react-native';
 import { PassoProps } from '../../types';
 import ProgressoPasso from '../../components/ProgressoPasso';
+
+const diagramaChassi = require('../../../assets/images/diagrama_localizacao_chassi.png');
 
 export default function Passo2Chassi({ onNext, onBack, passo, totalPassos }: PassoProps) {
   return (
     <View style={styles.container}>
       <ProgressoPasso passo={passo} totalPassos={totalPassos} titulo="Foto do Chassi" />
-      <View style={styles.corpo}>
-        <Text style={styles.placeholder}>📷 Captura da foto do chassi — em breve</Text>
-      </View>
+
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.instrucao}>
+          Localize o número do chassi em um dos pontos indicados abaixo e fotografe-o.
+        </Text>
+
+        <Image
+          source={diagramaChassi}
+          style={styles.imagem}
+          resizeMode="contain"
+        />
+
+        <Text style={styles.dica}>
+          💡 O chassi costuma estar gravado no para-brisa (canto inferior), no batente da porta do motorista ou no compartimento do motor.
+        </Text>
+      </ScrollView>
+
       <View style={styles.rodape}>
         <TouchableOpacity style={styles.botaoVoltar} onPress={onBack}>
           <Text style={styles.botaoVoltarTexto}>Voltar</Text>
@@ -24,11 +43,25 @@ export default function Passo2Chassi({ onNext, onBack, passo, totalPassos }: Pas
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  corpo: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  placeholder: { fontSize: 16, color: '#aaa', textAlign: 'center' },
+  content: { padding: 16, paddingBottom: 8 },
+  instrucao: {
+    fontSize: 15, color: '#333', lineHeight: 22, marginBottom: 16,
+  },
+  imagem: {
+    width: '100%',
+    height: 240,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    marginBottom: 16,
+  },
+  dica: {
+    fontSize: 13, color: '#666', lineHeight: 20,
+    backgroundColor: '#f0f6ff', padding: 12, borderRadius: 8,
+  },
   rodape: {
     flexDirection: 'row', gap: 12, padding: 16,
     borderTopWidth: 1, borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
   },
   botaoVoltar: {
     flex: 1, padding: 14, borderRadius: 8,

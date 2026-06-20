@@ -1,56 +1,84 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import {
+  View, Text, TextInput, ScrollView,
+  TouchableOpacity, StyleSheet,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList, Checklist } from '../types';
+import {
+  AppStackParamList,
+  ChecklistEstetica,
+  ChecklistMecanica,
+  ItemChecklist,
+} from '../types';
 
 type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'FormularioVistoria'>;
-  route: RouteProp<RootStackParamList, 'FormularioVistoria'>;
+  navigation: NativeStackNavigationProp<AppStackParamList, 'FormularioVistoria'>;
+  route: RouteProp<AppStackParamList, 'FormularioVistoria'>;
 };
 
-const checklistInicial: Checklist = {
-  documentacao: false,
-  lataria: false,
-  vidros: false,
-  pneus: false,
-  freios: false,
-  luzes: false,
-  motor: false,
-  suspensao: false,
-  escape: false,
-  interior: false,
+const esteticaInicial: ChecklistEstetica = {
+  lataria: null, vidros: null, farois: null, para_brisas: null, para_choques: null,
 };
 
-const checklistLabels: Record<keyof Checklist, string> = {
-  documentacao: 'Documentação',
-  lataria: 'Lataria',
-  vidros: 'Vidros',
-  pneus: 'Pneus',
-  freios: 'Freios',
-  luzes: 'Luzes',
-  motor: 'Motor',
-  suspensao: 'Suspensão',
-  escape: 'Escapamento',
-  interior: 'Interior',
+const mecanicaInicial: ChecklistMecanica = {
+  pneus: null, estepe: null, oleo: null, freios: null, suspensao: null,
 };
+
+const esteticaLabels: Record<keyof ChecklistEstetica, string> = {
+  lataria: 'Lataria', vidros: 'Vidros', farois: 'Faróis',
+  para_brisas: 'Para-brisa', para_choques: 'Para-choques',
+};
+
+const mecanicaLabels: Record<keyof ChecklistMecanica, string> = {
+  pneus: 'Pneus', estepe: 'Estepe', oleo: 'Óleo',
+  freios: 'Freios', suspensao: 'Suspensão',
+};
+
+function BotoesItem({
+  valor,
+  onChange,
+}: {
+  valor: ItemChecklist;
+  onChange: (v: ItemChecklist) => void;
+}) {
+  return (
+    <View style={styles.botoesItem}>
+      <TouchableOpacity
+        style={[styles.botaoItem, valor === 'ok' && styles.botaoOkAtivo]}
+        onPress={() => onChange(valor === 'ok' ? null : 'ok')}
+      >
+        <Text style={[styles.botaoItemTexto, valor === 'ok' && styles.textoAtivo]}>OK</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.botaoItem, valor === 'avaria' && styles.botaoAvariaAtivo]}
+        onPress={() => onChange(valor === 'avaria' ? null : 'avaria')}
+      >
+        <Text style={[styles.botaoItemTexto, valor === 'avaria' && styles.textoAtivo]}>Avaria</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function FormularioVistoriaScreen({ navigation }: Props) {
   const [placa, setPlaca] = useState('');
+  const [marca, setMarca] = useState('');
   const [modelo, setModelo] = useState('');
   const [ano, setAno] = useState('');
-  const [cor, setCor] = useState('');
-  const [renavam, setRenavam] = useState('');
-  const [proprietario, setProprietario] = useState('');
-  const [checklist, setChecklist] = useState<Checklist>(checklistInicial);
+  const [estetica, setEstetica] = useState<ChecklistEstetica>(esteticaInicial);
+  const [mecanica, setMecanica] = useState<ChecklistMecanica>(mecanicaInicial);
   const [observacoes, setObservacoes] = useState('');
 
-  function toggleItem(key: keyof Checklist) {
-    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+  function setItemEstetica(key: keyof ChecklistEstetica, valor: ItemChecklist) {
+    setEstetica((prev) => ({ ...prev, [key]: valor }));
+  }
+
+  function setItemMecanica(key: keyof ChecklistMecanica, valor: ItemChecklist) {
+    setMecanica((prev) => ({ ...prev, [key]: valor }));
   }
 
   function handleSalvar() {
-    // TODO: salvar vistoria via API
+    // TODO: salvar via supabase.from('vistorias').insert()
     navigation.goBack();
   }
 
@@ -58,17 +86,23 @@ export default function FormularioVistoriaScreen({ navigation }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.secao}>Dados do Veículo</Text>
       <TextInput style={styles.input} placeholder="Placa" value={placa} onChangeText={setPlaca} autoCapitalize="characters" />
+      <TextInput style={styles.input} placeholder="Marca" value={marca} onChangeText={setMarca} />
       <TextInput style={styles.input} placeholder="Modelo" value={modelo} onChangeText={setModelo} />
       <TextInput style={styles.input} placeholder="Ano" value={ano} onChangeText={setAno} keyboardType="numeric" />
-      <TextInput style={styles.input} placeholder="Cor" value={cor} onChangeText={setCor} />
-      <TextInput style={styles.input} placeholder="RENAVAM" value={renavam} onChangeText={setRenavam} keyboardType="numeric" />
-      <TextInput style={styles.input} placeholder="Proprietário" value={proprietario} onChangeText={setProprietario} />
 
-      <Text style={styles.secao}>Checklist</Text>
-      {(Object.keys(checklist) as (keyof Checklist)[]).map((key) => (
+      <Text style={styles.secao}>Checklist Estética</Text>
+      {(Object.keys(esteticaInicial) as (keyof ChecklistEstetica)[]).map((key) => (
         <View key={key} style={styles.checkItem}>
-          <Text style={styles.checkLabel}>{checklistLabels[key]}</Text>
-          <Switch value={checklist[key]} onValueChange={() => toggleItem(key)} />
+          <Text style={styles.checkLabel}>{esteticaLabels[key]}</Text>
+          <BotoesItem valor={estetica[key]} onChange={(v) => setItemEstetica(key, v)} />
+        </View>
+      ))}
+
+      <Text style={styles.secao}>Checklist Mecânica</Text>
+      {(Object.keys(mecanicaInicial) as (keyof ChecklistMecanica)[]).map((key) => (
+        <View key={key} style={styles.checkItem}>
+          <Text style={styles.checkLabel}>{mecanicaLabels[key]}</Text>
+          <BotoesItem valor={mecanica[key]} onChange={(v) => setItemMecanica(key, v)} />
         </View>
       ))}
 
@@ -82,8 +116,8 @@ export default function FormularioVistoriaScreen({ navigation }: Props) {
         numberOfLines={4}
       />
 
-      <TouchableOpacity style={styles.botao} onPress={handleSalvar}>
-        <Text style={styles.botaoTexto}>Salvar Vistoria</Text>
+      <TouchableOpacity style={styles.botaoSalvar} onPress={handleSalvar}>
+        <Text style={styles.botaoSalvarTexto}>Salvar Vistoria</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -94,23 +128,28 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   secao: { fontSize: 16, fontWeight: '700', color: '#1a73e8', marginTop: 20, marginBottom: 8 },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 15,
+    borderWidth: 1, borderColor: '#ddd', borderRadius: 8,
+    padding: 12, marginBottom: 12, fontSize: 15,
   },
   textarea: { height: 100, textAlignVertical: 'top' },
   checkItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingVertical: 8,
+    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
   },
-  checkLabel: { fontSize: 15, color: '#333' },
-  botao: { backgroundColor: '#1a73e8', padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 24 },
-  botaoTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  checkLabel: { fontSize: 15, color: '#333', flex: 1 },
+  botoesItem: { flexDirection: 'row', gap: 8 },
+  botaoItem: {
+    paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 6, borderWidth: 1, borderColor: '#ccc',
+  },
+  botaoOkAtivo: { backgroundColor: '#34a853', borderColor: '#34a853' },
+  botaoAvariaAtivo: { backgroundColor: '#ea4335', borderColor: '#ea4335' },
+  botaoItemTexto: { fontSize: 13, color: '#555' },
+  textoAtivo: { color: '#fff', fontWeight: '600' },
+  botaoSalvar: {
+    backgroundColor: '#1a73e8', padding: 16, borderRadius: 8,
+    alignItems: 'center', marginTop: 24,
+  },
+  botaoSalvarTexto: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

@@ -5,28 +5,33 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation/AuthNavigator';
-import { signIn } from '../services/auth';
+import { signUp } from '../services/auth';
 
 type Props = {
-  navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+  navigation: NativeStackNavigationProp<AuthStackParamList, 'Cadastro'>;
 };
 
-export default function LoginScreen({ navigation }: Props) {
+export default function CadastroScreen({ navigation }: Props) {
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin() {
-    if (!email || !senha) {
-      Alert.alert('Atenção', 'Preencha e-mail e senha.');
+  async function handleCadastro() {
+    if (!nome || !email || !senha) {
+      Alert.alert('Atenção', 'Preencha todos os campos.');
+      return;
+    }
+    if (senha.length < 6) {
+      Alert.alert('Atenção', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
     setLoading(true);
     try {
-      await signIn(email, senha);
+      await signUp(nome, email, senha);
       // RootNavigator redireciona automaticamente ao detectar a sessão
     } catch (error: any) {
-      Alert.alert('Erro ao entrar', error.message);
+      Alert.alert('Erro no cadastro', error.message);
     } finally {
       setLoading(false);
     }
@@ -34,7 +39,13 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Vistoria Veicular</Text>
+      <Text style={styles.titulo}>Criar Conta</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nome completo"
+        value={nome}
+        onChangeText={setNome}
+      />
       <TextInput
         style={styles.input}
         placeholder="E-mail"
@@ -45,18 +56,18 @@ export default function LoginScreen({ navigation }: Props) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Senha"
+        placeholder="Senha (mín. 6 caracteres)"
         value={senha}
         onChangeText={setSenha}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.botao} onPress={handleLogin} disabled={loading}>
+      <TouchableOpacity style={styles.botao} onPress={handleCadastro} disabled={loading}>
         {loading
           ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.botaoTexto}>Entrar</Text>}
+          : <Text style={styles.botaoTexto}>Criar Conta</Text>}
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
+      <TouchableOpacity onPress={() => navigation.goBack()}>
+        <Text style={styles.link}>Já tem conta? Entrar</Text>
       </TouchableOpacity>
     </View>
   );

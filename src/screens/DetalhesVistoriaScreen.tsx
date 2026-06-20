@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types';
+import { AppStackParamList } from '../types';
 
 type Props = {
-  route: RouteProp<RootStackParamList, 'DetalhesVistoria'>;
+  route: RouteProp<AppStackParamList, 'DetalhesVistoria'>;
 };
 
 export default function DetalhesVistoriaScreen({ route }: Props) {

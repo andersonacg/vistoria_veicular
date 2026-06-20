@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, Vistoria } from '../types';
+import { AppStackParamList, Vistoria } from '../types';
 
 type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+  navigation: NativeStackNavigationProp<AppStackParamList, 'Home'>;
 };
 
 const MOCK_VISTORIAS: Vistoria[] = [];

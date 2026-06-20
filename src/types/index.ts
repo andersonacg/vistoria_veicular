@@ -49,10 +49,8 @@ export interface Inspetor {
   email: string;
 }
 
-export type RootStackParamList = {
-  Login: undefined;
+export type AppStackParamList = {
   Home: undefined;
-  NovaVistoria: undefined;
   FormularioVistoria: { vistoriaId?: string };
   DetalhesVistoria: { vistoriaId: string };
 };

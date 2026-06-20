@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import {
   AppStackParamList, DadosFormulario,
   ChecklistEstetica, ChecklistMecanica, FotosVistoria,
 } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { salvarVistoria } from '../services/vistorias';
 import Passo1Veiculo from './formulario/Passo1Veiculo';
 import Passo2Chassi from './formulario/Passo2Chassi';
 import Passo3Estetica from './formulario/Passo3Estetica';
@@ -19,24 +21,18 @@ type Props = {
   route: RouteProp<AppStackParamList, 'FormularioVistoria'>;
 };
 
-const esteticaInicial: ChecklistEstetica = {
-  lataria: null, vidros: null, farois: null, para_brisas: null, para_choques: null,
-};
-
-const mecanicaInicial: ChecklistMecanica = {
-  pneus: null, estepe: null, oleo: null, freios: null, suspensao: null,
-};
-
-const fotosIniciais: FotosVistoria = {
-  frente: null, traseira: null, lateral_esquerda: null, lateral_direita: null, motor: null,
-};
-
 const dadosIniciais: DadosFormulario = {
   placa: '', marca: '', modelo: '', ano: '',
   foto_chassi: null,
-  checklist_estetica: esteticaInicial,
-  checklist_mecanica: mecanicaInicial,
-  fotos: fotosIniciais,
+  checklist_estetica: {
+    lataria: null, vidros: null, farois: null, para_brisas: null, para_choques: null,
+  },
+  checklist_mecanica: {
+    pneus: null, estepe: null, oleo: null, freios: null, suspensao: null,
+  },
+  fotos: {
+    frente: null, traseira: null, lateral_esquerda: null, lateral_direita: null, motor: null,
+  },
   assinatura: null,
   observacoes: '',
 };
@@ -44,19 +40,40 @@ const dadosIniciais: DadosFormulario = {
 const TOTAL_PASSOS = 7;
 
 export default function FormularioVistoriaScreen({ navigation }: Props) {
+  const { session } = useAuth();
   const [passo, setPasso] = useState(1);
   const [dados, setDados] = useState<DadosFormulario>(dadosIniciais);
+  const [salvando, setSalvando] = useState(false);
 
   function atualizar(parcial: Partial<DadosFormulario>) {
     setDados(prev => ({ ...prev, ...parcial }));
+  }
+
+  async function salvar() {
+    if (!session?.user?.id) {
+      Alert.alert('Erro', 'Sessão expirada. Faça login novamente.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      await salvarVistoria(dados, session.user.id);
+      Alert.alert(
+        'Vistoria salva!',
+        `Vistoria do veículo ${dados.placa} registrada com sucesso.`,
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (erro: any) {
+      Alert.alert('Erro ao salvar', erro.message ?? 'Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
   }
 
   function avancar() {
     if (passo < TOTAL_PASSOS) {
       setPasso(p => p + 1);
     } else {
-      // TODO: salvar vistoria no Supabase
-      navigation.goBack();
+      salvar();
     }
   }
 
@@ -69,6 +86,15 @@ export default function FormularioVistoriaScreen({ navigation }: Props) {
     } else {
       setPasso(p => p - 1);
     }
+  }
+
+  if (salvando) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#1a73e8" />
+        <Text style={styles.loadingTexto}>Enviando fotos e salvando vistoria...</Text>
+      </View>
+    );
   }
 
   const passoProps = { dados, atualizar, onNext: avancar, onBack: voltar, passo, totalPassos: TOTAL_PASSOS };
@@ -84,3 +110,11 @@ export default function FormularioVistoriaScreen({ navigation }: Props) {
     default: return null;
   }
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    gap: 16, backgroundColor: '#fff',
+  },
+  loadingTexto: { fontSize: 15, color: '#555', textAlign: 'center', paddingHorizontal: 32 },
+});
